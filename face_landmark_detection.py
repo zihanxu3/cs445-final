@@ -7,6 +7,12 @@ from imutils import face_utils
 #img_dir = input("Please enter your image directory: ")
 pred_dir = "cs445-final/utils/shape_predictor_68_face_landmarks.dat"
 
+def add_background(point_list):
+    point_list.append((1, 1))
+    point_list.append((image.shape[1]-1, 1))
+    point_list.append((1, image.shape[0]-1))
+    point_list.append((image.shape[1]-1, image.shape[0]-1))
+
 def facial_landmarks_detection(img_dir):
     # Read in image, resize it and convert it to gray scale
     image = cv2.imread(img_dir)
@@ -21,7 +27,7 @@ def facial_landmarks_detection(img_dir):
     # Locate the face in the given gray_scale image
     rects = detector(image_gray, 1)
 
-    # Make a list to store data points
+    point_list = []
     points = np.zeros((68,2))
 
     for i, rect in enumerate(rects):
@@ -41,10 +47,19 @@ def facial_landmarks_detection(img_dir):
         for x, y in shape:
             point_color = (0, 255, 0)
             cv2.circle(image, (x, y), 2, point_color, 2)
-            points[i][0] = x
-            points[i][1] = y
+            point_list.append((x, y))
+            points[i][0] += x
+            points[i][1] += y
             i += 1
+
+        add_background(point_list)
+
+    ary = points / 2
+    ary = np.append(ary, [[1,1]], axis=0)
+    ary = np.append(ary, [[image.shape[1]-1,1]], axis=0)
+    ary = np.append(ary, [[1,image.shape[0]-1]], axis=0)
+    ary = np.append(ary, [[image.shape[1]-1,image.shape[0]-1]], axis=0)
 
     #plt.figure()
     #plt.imshow(image)
-    return points
+    return image, point_list, ary
